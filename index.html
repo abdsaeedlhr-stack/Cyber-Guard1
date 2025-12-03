@@ -1,30 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
-<link rel="icon" type="image/png" href="favicon.png">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberGuard - Advanced Security Tool</title>
-    
-    <!-- Load Tailwind CSS -->
+    <title>CyberGuard - Security & Analytics</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Load React and ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    
-    <!-- Load Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-
     <style>
         body { font-family: 'Inter', sans-serif; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
-        /* Smooth scrolling behavior */
         html { scroll-behavior: smooth; }
-        
-        /* Custom scrollbar for webkit */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
@@ -52,15 +40,31 @@
         const Copy = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>;
         const X = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 18 18"/></svg>;
         const Star = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none" className={className}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
+        const User = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+        const Database = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>;
+        const Lock = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
 
         // --- MAIN APP COMPONENT ---
         const App = () => {
+          // --- User & Logging State ---
+          const [currentUser, setCurrentUser] = useState(null); // 'Admin' or 'GuestName'
+          const [userNameInput, setUserNameInput] = useState('');
+          const [hasLoggedResult, setHasLoggedResult] = useState(false);
+          const [visitLogs, setVisitLogs] = useState([]);
+          
+          // --- Admin Access State ---
+          const [showAdminPanel, setShowAdminPanel] = useState(false);
+          const [showAdminLogin, setShowAdminLogin] = useState(false);
+          const [adminPassInput, setAdminPassInput] = useState('');
+          const [adminError, setAdminError] = useState('');
+
+          // --- Password Tool State ---
           const [password, setPassword] = useState('');
           const [showPassword, setShowPassword] = useState(false);
           const [strength, setStrength] = useState(0);
           const [feedback, setFeedback] = useState([]);
           
-          // Generator State
+          // --- Generator State ---
           const [showGenerator, setShowGenerator] = useState(false);
           const [genLength, setGenLength] = useState(16);
           const [genLetters, setGenLetters] = useState(true);
@@ -70,6 +74,66 @@
 
           const factsSectionRef = useRef(null);
 
+          // --- LOGGING SYSTEM ---
+          useEffect(() => {
+              // Load existing logs from local storage on startup
+              const savedLogs = JSON.parse(localStorage.getItem('cyberguard_logs') || '[]');
+              setVisitLogs(savedLogs);
+          }, []);
+
+          const handleLogin = (e) => {
+              e.preventDefault();
+              if (userNameInput.trim()) {
+                  setCurrentUser(userNameInput);
+                  // Log the "Visit"
+                  const newLog = {
+                      id: Date.now(),
+                      user: userNameInput,
+                      action: 'Login',
+                      time: new Date().toLocaleString(),
+                      details: 'Started Session'
+                  };
+                  const updatedLogs = [newLog, ...visitLogs];
+                  setVisitLogs(updatedLogs);
+                  localStorage.setItem('cyberguard_logs', JSON.stringify(updatedLogs));
+              }
+          };
+          
+          const handleAdminLogin = (e) => {
+              e.preventDefault();
+              if (adminPassInput === "090212") {
+                  setShowAdminLogin(false);
+                  setShowAdminPanel(true);
+                  setAdminPassInput('');
+                  setAdminError('');
+              } else {
+                  setAdminError("Access Denied: Incorrect PIN");
+              }
+          };
+
+          const logPasswordCheck = (finalScore, passLength) => {
+              if (currentUser && !hasLoggedResult && password.length > 0) {
+                  const newLog = {
+                      id: Date.now(),
+                      user: currentUser,
+                      action: 'Analysis',
+                      time: new Date().toLocaleString(),
+                      details: `Tested Password (Len: ${passLength}, Score: ${finalScore}/6)`
+                  };
+                  const updatedLogs = [newLog, ...visitLogs];
+                  setVisitLogs(updatedLogs);
+                  localStorage.setItem('cyberguard_logs', JSON.stringify(updatedLogs));
+                  setHasLoggedResult(true); // Prevent spamming logs for same password
+              }
+          };
+
+          const clearLogs = () => {
+              if(confirm("Are you sure you want to delete all visitor history?")) {
+                  localStorage.removeItem('cyberguard_logs');
+                  setVisitLogs([]);
+              }
+          };
+
           // Scroll Handler
           const scrollToFacts = () => {
             if (factsSectionRef.current) {
@@ -77,8 +141,9 @@
             }
           };
 
-          // Password Analysis Logic (Enhanced)
+          // Password Analysis Logic
           useEffect(() => {
+            setHasLoggedResult(false); // Reset log trigger when typing new password
             let score = 0;
             let issues = [];
 
@@ -89,24 +154,15 @@
             }
 
             // Basic Requirements
-            if (password.length >= 8) score += 1;
-            else issues.push("Use at least 8 characters");
-
-            if (/[A-Z]/.test(password)) score += 1;
-            else issues.push("Add an uppercase letter");
-
-            if (/[a-z]/.test(password)) score += 1; // New check for lowercase
-            else issues.push("Add a lowercase letter");
-
-            if (/[0-9]/.test(password)) score += 1;
-            else issues.push("Include a number");
-
-            if (/[^A-Za-z0-9]/.test(password)) score += 1;
-            else issues.push("Add a special symbol (!@#$)");
+            if (password.length >= 8) score += 1; else issues.push("Use at least 8 characters");
+            if (/[A-Z]/.test(password)) score += 1; else issues.push("Add an uppercase letter");
+            if (/[a-z]/.test(password)) score += 1; else issues.push("Add a lowercase letter");
+            if (/[0-9]/.test(password)) score += 1; else issues.push("Include a number");
+            if (/[^A-Za-z0-9]/.test(password)) score += 1; else issues.push("Add a special symbol (!@#$)");
 
             // Bonus for "Extremely Strong"
             if (password.length >= 12 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password) && /[^A-Za-z0-9]/.test(password)) {
-                score += 1; // Bonus point
+                score += 1;
             }
 
             setStrength(score);
@@ -134,16 +190,28 @@
                 result += chars.charAt(Math.floor(Math.random() * chars.length));
             }
             setGeneratedPass(result);
+            
+            // Log that they used the generator
+            if (currentUser) {
+                 const newLog = {
+                      id: Date.now(),
+                      user: currentUser,
+                      action: 'Generator',
+                      time: new Date().toLocaleString(),
+                      details: 'Generated a Secure Password'
+                  };
+                  const updatedLogs = [newLog, ...visitLogs];
+                  setVisitLogs(updatedLogs);
+                  localStorage.setItem('cyberguard_logs', JSON.stringify(updatedLogs));
+            }
           };
 
           const copyToClipboard = () => {
              if (generatedPass) {
                  navigator.clipboard.writeText(generatedPass);
-                 // Visual feedback could be added here
              }
           };
 
-          // Styling Helpers
           const getStrengthLabel = () => {
             if (!password) return 'Enter Password';
             if (strength <= 2) return 'Weak';
@@ -157,32 +225,116 @@
             if (strength <= 2) return 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]';
             if (strength <= 4) return 'bg-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.5)]';
             if (strength === 5) return 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]';
-            return 'bg-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.8)]'; // Purple for extremely strong
+            return 'bg-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.8)]'; 
           };
 
           const facts = [
-            {
-              icon: <Smartphone className="w-8 h-8 text-blue-400" />,
-              title: "2FA is Your Best Friend",
-              text: "Two-Factor Authentication blocks 99.9% of automated attacks. Even if a hacker has your password, they can't get in without your second code."
-            },
-            {
-              icon: <Mail className="w-8 h-8 text-purple-400" />,
-              title: "Phishing Attacks",
-              text: "90% of data breaches start with a phishing email. Always check the sender's address carefully before clicking links."
-            },
-            {
-              icon: <RefreshCw className="w-8 h-8 text-green-400" />,
-              title: "Update Everything",
-              text: "Software updates often contain security patches for known vulnerabilities. delaying updates leaves your 'digital front door' unlocked."
-            },
-            {
-              icon: <Wifi className="w-8 h-8 text-orange-400" />,
-              title: "Public Wi-Fi Danger",
-              text: "Public Wi-Fi is rarely secure. Hackers can intercept data sent over these networks. Use a VPN if you must connect."
-            }
+            { icon: <Smartphone className="w-8 h-8 text-blue-400" />, title: "2FA is Your Best Friend", text: "Two-Factor Authentication blocks 99.9% of automated attacks." },
+            { icon: <Mail className="w-8 h-8 text-purple-400" />, title: "Phishing Attacks", text: "90% of data breaches start with a phishing email." },
+            { icon: <RefreshCw className="w-8 h-8 text-green-400" />, title: "Update Everything", text: "Software updates often contain security patches." },
+            { icon: <Wifi className="w-8 h-8 text-orange-400" />, title: "Public Wi-Fi Danger", text: "Public Wi-Fi is rarely secure. Use a VPN if you must connect." }
           ];
 
+          // --- VIEW: LOGIN SCREEN ---
+          if (!currentUser) {
+              return (
+                <div className="min-h-screen bg-slate-900 text-slate-100 font-sans flex items-center justify-center p-4">
+                    <div className="max-w-md w-full bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-cyan-500 to-blue-500"></div>
+                        <div className="flex flex-col items-center mb-8">
+                            <Shield className="w-16 h-16 text-cyan-400 mb-4" />
+                            <h1 className="text-3xl font-bold">CYBER<span className="font-light">GUARD</span></h1>
+                            <p className="text-slate-400 text-center mt-2">Welcome to the security portal.</p>
+                        </div>
+                        <form onSubmit={handleLogin} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">Enter Your Name / Roll ID</label>
+                                <div className="relative">
+                                    <User className="absolute left-3 top-3.5 text-slate-500 w-5 h-5" />
+                                    <input 
+                                        type="text" 
+                                        required
+                                        placeholder="e.g. John Doe or F2025..." 
+                                        value={userNameInput}
+                                        onChange={(e) => setUserNameInput(e.target.value)}
+                                        className="w-full bg-slate-900 border border-slate-600 rounded-lg py-3 pl-10 pr-4 focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
+                                    />
+                                </div>
+                            </div>
+                            <button type="submit" className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-3 rounded-lg transition-colors">
+                                Access Tool
+                            </button>
+                        </form>
+                        <p className="mt-6 text-xs text-center text-slate-500">
+                            Session data will be logged for administrative review.
+                        </p>
+                    </div>
+                </div>
+              );
+          }
+
+          // --- VIEW: ADMIN PANEL ---
+          if (showAdminPanel) {
+              return (
+                  <div className="min-h-screen bg-slate-900 text-slate-100 p-8">
+                      <div className="max-w-4xl mx-auto">
+                          <div className="flex justify-between items-center mb-8">
+                              <h2 className="text-2xl font-bold flex items-center gap-3">
+                                  <Database className="w-8 h-8 text-cyan-400" />
+                                  Admin Access Logs
+                              </h2>
+                              <div className="flex gap-3">
+                                  <button onClick={clearLogs} className="px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/20 text-sm">Clear History</button>
+                                  <button onClick={() => setShowAdminPanel(false)} className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700">Close Panel</button>
+                              </div>
+                          </div>
+                          
+                          <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+                              <div className="overflow-x-auto">
+                                  <table className="w-full text-left text-sm text-slate-300">
+                                      <thead className="bg-slate-900 text-slate-400 uppercase font-mono text-xs">
+                                          <tr>
+                                              <th className="px-6 py-4">Time</th>
+                                              <th className="px-6 py-4">User</th>
+                                              <th className="px-6 py-4">Action</th>
+                                              <th className="px-6 py-4">Details</th>
+                                          </tr>
+                                      </thead>
+                                      <tbody className="divide-y divide-slate-700">
+                                          {visitLogs.map((log) => (
+                                              <tr key={log.id} className="hover:bg-slate-700/50 transition-colors">
+                                                  <td className="px-6 py-4 font-mono text-xs text-slate-500">{log.time}</td>
+                                                  <td className="px-6 py-4 font-bold text-white">{log.user}</td>
+                                                  <td className="px-6 py-4">
+                                                      <span className={`px-2 py-1 rounded text-xs border ${
+                                                          log.action === 'Login' ? 'border-blue-500/30 bg-blue-500/10 text-blue-400' :
+                                                          log.action === 'Generator' ? 'border-purple-500/30 bg-purple-500/10 text-purple-400' :
+                                                          'border-green-500/30 bg-green-500/10 text-green-400'
+                                                      }`}>
+                                                          {log.action}
+                                                      </span>
+                                                  </td>
+                                                  <td className="px-6 py-4 text-slate-400">{log.details}</td>
+                                              </tr>
+                                          ))}
+                                          {visitLogs.length === 0 && (
+                                              <tr>
+                                                  <td colSpan="4" className="px-6 py-8 text-center text-slate-500 italic">No activity recorded yet.</td>
+                                              </tr>
+                                          )}
+                                      </tbody>
+                                  </table>
+                              </div>
+                          </div>
+                          <div className="mt-4 text-center">
+                              <p className="text-slate-500 text-xs">Total Interactions: {visitLogs.length}</p>
+                          </div>
+                      </div>
+                  </div>
+              );
+          }
+
+          // --- VIEW: MAIN APP ---
           return (
             <div className="min-h-screen bg-slate-900 text-slate-100 font-sans selection:bg-cyan-500 selection:text-slate-900">
               
@@ -195,10 +347,23 @@
                       CYBER<span className="font-light text-slate-100">GUARD</span>
                     </span>
                   </div>
-                  <div className="hidden md:flex gap-6 text-sm font-medium text-slate-400">
-                    <span className="hover:text-cyan-400 cursor-pointer transition-colors">Analyzer</span>
-                    <button onClick={scrollToFacts} className="hover:text-cyan-400 cursor-pointer transition-colors bg-transparent border-none text-slate-400 font-medium">Security Facts</button>
-                    <span className="hover:text-cyan-400 cursor-pointer transition-colors">Resources</span>
+                  <div className="flex items-center gap-6">
+                      <div className="hidden md:flex gap-6 text-sm font-medium text-slate-400">
+                        <span className="hover:text-cyan-400 cursor-pointer transition-colors">Analyzer</span>
+                        <button onClick={scrollToFacts} className="hover:text-cyan-400 cursor-pointer transition-colors bg-transparent border-none text-slate-400 font-medium">Security Facts</button>
+                      </div>
+                      
+                      {/* User Profile / Admin Toggle */}
+                      <div className="flex items-center gap-3 pl-6 border-l border-slate-700">
+                          <span className="text-sm font-mono text-cyan-500">{currentUser}</span>
+                          <button 
+                            onClick={() => setShowAdminLogin(true)} 
+                            className="p-2 hover:bg-slate-800 rounded-full text-slate-500 hover:text-white transition-colors"
+                            title="Admin Logs"
+                          >
+                              <Database className="w-5 h-5" />
+                          </button>
+                      </div>
                   </div>
                 </div>
               </nav>
@@ -214,13 +379,13 @@
                       <span className="text-cyan-400">hack-proof?</span>
                     </h1>
                     <p className="text-slate-400 text-lg max-w-md mx-auto lg:mx-0">
-                      Most passwords can be cracked in seconds. Test yours locally—your input never leaves this browser.
+                      Most passwords can be cracked in seconds. Test yours locally.
                     </p>
                     
                     <div className="flex gap-4 justify-center lg:justify-start pt-4">
                       <div className="flex items-center gap-2 px-4 py-2 bg-slate-800 rounded-full border border-slate-700">
                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                        <span className="text-sm font-medium">Client-side Secure</span>
+                        <span className="text-sm font-medium">Monitoring Active</span>
                       </div>
                     </div>
                   </div>
@@ -253,6 +418,7 @@
                           type={showPassword ? "text" : "password"}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
+                          onBlur={() => logPasswordCheck(strength, password.length)} // Log when they finish typing/leave field
                           placeholder="Type a password..."
                           className="w-full bg-slate-900 border border-slate-700 text-slate-100 px-5 py-4 rounded-lg focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all text-lg pr-12 font-mono"
                         />
@@ -363,11 +529,47 @@
 
               </main>
 
+              {/* ADMIN LOGIN MODAL */}
+              {showAdminLogin && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-slate-800 rounded-xl border border-slate-700 shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800">
+                            <h3 className="text-lg font-bold flex items-center gap-2">
+                                <Lock className="w-5 h-5 text-cyan-400" />
+                                Admin Access
+                            </h3>
+                            <button onClick={() => {setShowAdminLogin(false); setAdminError(''); setAdminPassInput('');}} className="text-slate-400 hover:text-white transition-colors">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleAdminLogin} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Security PIN</label>
+                                <input 
+                                    type="password" 
+                                    value={adminPassInput}
+                                    onChange={(e) => setAdminPassInput(e.target.value)}
+                                    placeholder="Enter 6-digit PIN"
+                                    className="w-full bg-slate-900 border border-slate-600 rounded-lg py-2 px-4 focus:ring-2 focus:ring-cyan-500 outline-none text-center tracking-widest font-mono text-lg"
+                                    autoFocus
+                                />
+                                {adminError && <p className="text-red-400 text-xs mt-2 text-center">{adminError}</p>}
+                            </div>
+                            <button 
+                                type="submit"
+                                className="w-full py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors"
+                            >
+                                Unlock Logs
+                            </button>
+                        </form>
+                    </div>
+                </div>
+              )}
+
               {/* GENERATOR MODAL */}
               {showGenerator && (
                   <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
                       <div className="bg-slate-800 rounded-xl border border-slate-700 shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
-                          {/* Modal Header */}
                           <div className="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800">
                               <h3 className="text-xl font-bold flex items-center gap-2">
                                   <RefreshCw className="w-5 h-5 text-cyan-400" />
@@ -377,10 +579,7 @@
                                   <X className="w-6 h-6" />
                               </button>
                           </div>
-                          
-                          {/* Modal Body */}
                           <div className="p-6 space-y-6">
-                              {/* Result Display */}
                               <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 flex items-center justify-between gap-3">
                                   <span className="font-mono text-lg break-all text-cyan-300">
                                       {generatedPass || "Click Generate below"}
@@ -391,8 +590,6 @@
                                       </button>
                                   )}
                               </div>
-
-                              {/* Settings */}
                               <div className="space-y-4">
                                   <div className="space-y-2">
                                       <div className="flex justify-between text-sm">
@@ -407,7 +604,6 @@
                                           className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
                                       />
                                   </div>
-
                                   <div className="grid grid-cols-1 gap-3">
                                       <label className="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700 transition-colors">
                                           <input type="checkbox" checked={genLetters} onChange={() => setGenLetters(!genLetters)} className="w-5 h-5 rounded border-slate-500 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-slate-800 bg-slate-900" />
@@ -423,7 +619,6 @@
                                       </label>
                                   </div>
                               </div>
-
                               <button 
                                   onClick={generatePassword}
                                   className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-lg transition-all shadow-lg active:scale-95"
@@ -459,7 +654,4 @@
         root.render(<App />);
     </script>
 </body>
-
 </html>
-
-
